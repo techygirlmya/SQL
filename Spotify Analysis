@@ -1,0 +1,102 @@
+--This project is an analysis of Spotify's 2021 top 50 data, downloaded from Kaggle.
+--First, I downloaded the data I planned to use and created a table in SQLiteStudio.
+--Next, I imported data from the Excel file saved on my computer to my Spotifydata table.
+--Finally, I entered my query information to find the answers the my questions.
+
+--The Spotifydata table used: 
+CREATE TABLE BIT_DB.Spotifydata (
+id integer PRIMARY KEY,
+artist_name varchar NOT NULL,
+track_name varchar NOT NULL,
+track_id varchar NOT NULL,
+popularity integer NOT NULL,
+danceability decimal(4,3) NOT NULL,
+energy decimal(4,3) NOT NULL,
+key integer NOT NULL,
+loudness decimal(5,3) NOT NULL,
+mode integer NOT NULL,
+speechiness decimal(5,4) NOT NULL,
+acousticness decimal(6,5) NOT NULL,
+instrumentalness text NOT NULL,
+liveness decimal(5,4) NOT NULL,
+valence decimal(4,3) NOT NULL,
+tempo decimal(6,3) NOT NULL,
+duration_ms integer NOT NULL,
+time_signature integer NOT NULL)
+
+--Here are the questions and query information that I used to perform my analysis using SQLiteStudio. 
+
+--What are the top 10 songs by popularity?
+SELECT track_name, artist_name, popularity
+FROM Spotifydata
+ORDER BY popularity DESC
+LIMIT 10;
+
+-- Which 2 songs have the highest and lowest danceability score?
+SELECT artist_name Artist, track_name Song, danceability Danceability
+FROM Spotifydata
+WHERE danceability >.9
+OR danceability <.4
+ORDER BY danceability DESC;
+
+-- How do the top 10 most popular songs score in loudness?
+SELECT artist_name Artist, track_name Song, popularity Popularity, loudness Loudness
+FROM Spotifydata
+ORDER BY popularity DESC
+LIMIT 10;
+
+-- What is the average song energy and loudness for each artist?
+SELECT artist_name Artist, ROUND(AVG(energy), 2) AS Avg_Energy, ROUND(AVG(loudness), 2) AS Avg_Loudness
+FROM Spotifydata
+GROUP BY artist_name
+ORDER BY artist_name;
+
+---- What is the length of the top 10 songs?
+SELECT track_name Title, artist_name By, duration_ms/60000 Minutes
+FROM Spotifydata
+ORDER BY popularity DESC
+LIMIT 10;
+
+-- What is the longest song in this dataset?
+SELECT track_name Title, artist_name By
+FROM Spotifydata
+ORDER BY duration_ms DESC
+LIMIT 1;
+
+-- Are songs with higher speechiness above average in popularity?
+SELECT track_name AS TITLE, artist_name AS ARTIST, popularity POPULARITY, speechiness SPEECHINESS,
+CASE
+WHEN popularity > (SELECT AVG(popularity) FROM Spotifydata) THEN 'Yes'
+ELSE 'No'
+END AS ABOVE_AVERAGE_POPULARITY
+FROM Spotifydata
+WHERE speechiness > (SELECT AVG(speechiness) FROM Spotifydata)
+ORDER BY speechiness DESC
+LIMIT 10;
+
+--How do songs with a danceability higher than .75 rate in nstrumentalness, speechiness, and acousticness?
+SELECT artist_name ARTIST, track_name TITLE, danceability, instrumentalness, speechiness, acousticness
+FROM Spotifydata
+WHERE danceability >.75
+ORDER BY danceability DESC;
+
+-- What songs were the least popular in 2021 by artist?
+SELECT artist_name ARTIST, track_name TITLE, popularity POPULARITY
+FROM Spotifydata
+ORDER BY popularity
+LIMIT 10;
+
+-- Which artists had the most songs rating above average in popularity?
+SELECT artist_name ARTIST, COUNT(track_name) AS SONGS
+FROM Spotifydata
+WHERE popularity > (SELECT AVG(popularity) FROM Spotifydata)
+GROUP BY artist_name
+ORDER BY SONGS DESC
+LIMIT 10;
+
+--What is the average song length for each artist in minutes?
+SELECT artist_name ARTIST, ROUND(AVG(duration_ms) / 60000.0, 2) AS MINUTES
+FROM Spotifydata
+WHERE popularity > (SELECT AVG(popularity) FROM Spotifydata)
+GROUP BY artist_name
+ORDER BY MINUTES DESC;
