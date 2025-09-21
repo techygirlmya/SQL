@@ -1,0 +1,253 @@
+--This is my final project, found at the end of the 'Bootcamp' section of the Break Into Tech Certification program!
+
+--Here is the data used for this analysis project:
+
+// Chinook database diagram
+// Break Into Tech
+
+// This is called DBML code
+// You don't need to learn it :) 
+
+// Create Tables
+Table media_types [headercolor: #625DEC] {
+  MediaTypeId integer [pk]
+  Name nvarchar(120)
+}
+
+Table genres [headercolor: #625DEC]{
+  GenreId integer [pk]
+  Name nvarchar(120)
+}
+
+Table artists [headercolor: #625DEC]{
+  ArtistId integer [pk]
+  Name nvarchar(120)
+}
+
+Table albums [headercolor: #625DEC]{
+  AlbumId integer [pk]
+  Title nvarchar(160)
+  ArtistId integer
+}
+
+Table tracks [headercolor: #625DEC] {
+  TrackId integer [pk]
+  Name nvarchar(200)
+  AlbumId integer
+  MediaTypeId integer
+  GenreId integer
+  Composer nvarchar(220)
+  Milliseconds integer
+  Bytes integer
+  UnitPrice numeric
+}
+
+Table playlists [headercolor: #625DEC]{
+  PlaylistId integer [pk]
+  Name nvarchar(120)
+}
+
+Table playlist_track [headercolor: #625DEC]{
+  PlaylistId integer [pk]
+  TrackId integer [pk]
+}
+
+Table customers [headercolor: #625DEC]{
+  CustomerId integer [pk]
+  FirstName nvarchar(40)
+  LastName nvarchar(20)
+  Company nvarchar(80)
+  Address nvarchar(70)
+  City nvarchar(40)
+  State nvarchar(40)
+  Country nvarchar(40)
+  PostalCode nvarchar(10)
+  Phone nvarchar(24)
+  Fax nvarchar(24)
+  Email nvarchar(60)
+  SupportRepId integer
+}
+
+Table employees [headercolor: #625DEC]{
+  EmployeeId integer [pk]
+  LastName nvarchar(20)
+  FirstName nvarchar(20)
+  Title nvarchar(30)
+  ReportsTo integer
+  BirthDate datetime
+  HireDate datetime
+  Address nvarchar(70)
+  City nvarchar(40)
+  State nvarchar(40)
+  Country nvarchar(40)
+  PostalCode nvarchar(10)
+  Phone nvarchar(24)
+  Fax nvarchar(24)
+  Email nvarchar(60)
+}
+
+Table invoices [headercolor: #625DEC]{
+  InvoiceId integer [pk]
+  CustomerId integer
+  InvoiceDate datetime
+  BillingAddress nvarchar(70)
+  BillingCity nvarchar(40)
+  BillingState nvarchar(40)
+  BillingCountry nvarchar(40)
+  BillingPostalCode nvarchar(10)
+  Total numeric
+}
+
+Table invoice_items [headercolor: #625DEC]{
+  InvoiceLineId integer [pk]
+  InvoiceId integer
+  TrackId integer
+  UnitPrice numeric
+  Quantity integer
+}
+
+// Relationships
+
+Ref: albums.ArtistId > artists.ArtistId
+Ref: tracks.AlbumId > albums.AlbumId
+Ref: tracks.MediaTypeId > media_types.MediaTypeId
+Ref: tracks.GenreId > genres.GenreId
+Ref: playlist_track.PlaylistId > playlists.PlaylistId
+Ref: playlist_track.TrackId > tracks.TrackId
+Ref: invoices.CustomerId > customers.CustomerId
+Ref: invoice_items.InvoiceId > invoices.InvoiceId
+Ref: invoice_items.TrackId > tracks.TrackId
+Ref: customers.SupportRepId > employees.EmployeeId
+Ref: employees.ReportsTo > employees.EmployeeId
+
+
+
+
+
+--Here are my SQL Final Project Questions:
+
+1.	What are the top 3 cities for customer sales?
+SELECT c.city, SUM(i.total) AS total_sales
+FROM customers AS c JOIN invoices AS i ON c.customerid = i.customerid
+GROUP BY c.city
+ORDER BY total_sales DESC LIMIT 3;
+-- To answer this question, I first joined the invoices and customers tables. Then I summed the total sales for each city and ordered the results to find the top three.
+
+2.	Who is the longest-tenured employee, and how many years have they worked here?
+SELECT firstname, lastname, hiredate, STRFTIME('%Y', 'now') - STRFTIME('%Y', hiredate) AS years_of_service
+FROM employees ORDER BY hiredate ASC LIMIT 1;
+-- To answer this, I looked at the hiredate column in the employees table. Based on this, I calculated the difference between the current year and the year they were hired to determine their years of service with this company.
+
+3.	Which playlists contain a track from the 'Rock' genre?
+SELECT DISTINCT p.name AS playlist_name
+FROM playlists AS p
+JOIN playlist_track AS pt ON p.playlistid = pt.playlistid JOIN tracks AS t
+ON pt.trackid = t.trackid JOIN genres AS g ON t.genreid = g.genreid
+WHERE g.name = 'Rock';
+-- This query helped me understand the content of the playlists. I joined the playlists, playlist_track, tracks, and genres tables to filter for tracks that were specifically from the 'Rock' genre.
+
+4.	Show Customers (their full names, customer ID, and country) who are not in the US.
+SELECT FirstName, LastName, CustomerId, Country
+FROM Customers
+WHERE Country <> 'USA';
+-- To answer this, I selected the specified columns from the Customers table. I then used the WHERE clause to filter the results, so they only included rows where the Country column was not equal to 'USA'.
+5.	Show only the Customers from Brazil.
+SELECT FirstName, LastName, CustomerId
+FROM Customers
+WHERE Country = 'Brazil';
+-- I used a simple WHERE clause to filter the Customers table and find all customers where the Country column was 'Brazil'.
+
+6.	Find the Invoices of customers who are from Brazil. The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
+SELECT c.FirstName, c.LastName, i.InvoiceId, i.InvoiceDate, i.BillingCountry
+FROM Customers AS c JOIN Invoices AS i ON c.CustomerId = i.CustomerId
+WHERE c.Country = 'Brazil';
+-- I used an INNER JOIN to connect the Customers table with the Invoices table on their common CustomerId. The WHERE clause then filtered the joined results to only show customers from 'Brazil', and the SELECT clause retrieved the required details from both tables.
+
+7.	Show the Employees who are Sales Agents.
+SELECT FirstName, LastName
+FROM Employees
+WHERE Title = 'Sales Support Agent';
+-- I filtered the Employees table by the Title column to find all employees who were 'Sales Support Agent'.
+
+8.	Find a unique/distinct list of billing countries from the Invoice table.
+SELECT DISTINCT BillingCountry
+FROM Invoices
+ORDER BY BillingCountry;
+-- I used the DISTINCT keyword to return only unique values from the BillingCountry column in the Invoices table. I then used ORDER BY to sort the results alphabetically.
+
+9.	Provide a query that shows the invoices associated with each sales agent. The resulting table should include the Sales Agent's full name.
+SELECT e.FirstName, e.LastName, i.InvoiceId, i.Total
+FROM Employees AS e JOIN Customers AS c ON e.EmployeeId = c.SupportRepId
+JOIN Invoices AS i ON c.CustomerId = i.CustomerId WHERE e.Title = 'Sales Support Agent'
+ORDER BY e.LastName, e.FirstName, i.InvoiceId;
+-- To get the invoices associated with each sales agent, I used two JOIN clauses: first to link the Employees table to the Customers table, and then a second one to link the Customers table to the Invoices table. I then used a WHERE clause to filter the results to only include rows where the employee title was 'Sales Support Agent'.
+
+10.	Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+SELECT i.Total, c.FirstName AS CustomerFirstName, c.LastName AS CustomerLastName, c.Country, e.FirstName AS AgentFirstName, e.LastName AS AgentLastName
+FROM Invoices AS i
+JOIN Customers AS c ON i.CustomerId = c.CustomerId
+LEFT JOIN Employees AS e ON c.SupportRepId = e.EmployeeId;
+-- To get the requested details, I joined the Invoices table with the Customers table. I then used a LEFT JOIN to include the sales agent's information, which ensured that all invoices were returned even if a customer didn't have an assigned sales representative.
+
+11.	How many Invoices were there in 2009?
+SELECT COUNT(*)
+FROM Invoices
+WHERE STRFTIME('%Y', InvoiceDate) = '2009';
+-- I used the COUNT(*) function to count all the rows that met the WHERE condition. I also used the STRFTIME function to extract the year from the InvoiceDate column, which allowed me to filter for all the invoices from 2009.
+
+12.	What are the total sales for 2009?
+SELECT SUM(Total)
+FROM Invoices
+WHERE STRFTIME('%Y', InvoiceDate) = '2009';
+- - Similar to the previous query, I used SUM to add up the values in the Total column for all invoices that fell within the year 2009.
+
+13.	Write a query that includes the purchased track name with each invoice line ID.
+SELECT ii.InvoiceLineId, t.Name AS TrackName
+FROM Invoice_Items AS ii
+JOIN Tracks AS t ON ii.TrackId = t.TrackId;
+-- I joined the Invoice_Items table with the Tracks table on their shared TrackId. This allowed me to select the InvoiceLineId and the corresponding name of the purchased track.
+
+14.	Write a query that includes the purchased track name AND artist name with each invoice line ID.
+SELECT ii.InvoiceLineId, t.Name AS TrackName, ar.Name AS ArtistName
+FROM Invoice_Items AS ii JOIN Tracks AS t ON ii.TrackId = t.TrackId JOIN Albums AS al ON t.AlbumId = al.AlbumId
+JOIN Artists AS ar ON al.ArtistId = ar.ArtistId;
+-- This query required multiple joins to connect the tables in the correct order: Invoice_Items to Tracks, Tracks to Albums, and Albums to Artists. Each join was made on a common key, which ultimately allowed me to access the artist's name.
+
+15.	Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+SELECT t.Name AS TrackName, al.Title AS AlbumName, mt.Name AS MediaTypeName, g.Name AS GenreName
+FROM Tracks AS t JOIN Albums AS al ON t.AlbumId = al.AlbumId JOIN Media_Types AS mt ON t.MediaTypeId = mt.MediaTypeId
+JOIN Genres AS g ON t.GenreId = g.GenreId;
+-- This was a classic example of a multi-table JOIN. I connected the Tracks table to the Albums, Media_Types, and Genres tables using their respective foreign keys to pull all the related information into a single result set.
+
+16.	Show the total sales made by each sales agent.
+SELECT e.FirstName, e.LastName, SUM(i.Total) AS total_sales
+FROM Employees AS e JOIN Customers AS c ON e.EmployeeId = c.SupportRepId JOIN Invoices AS i ON c.CustomerId = i.CustomerId
+WHERE e.Title = 'Sales Support Agent'
+GROUP BY e.EmployeeId
+ORDER BY total_sales DESC;
+-- To get the total sales made by each sales agent, I used a similar pattern to my previous query but used SUM(i.Total) to calculate the total sales amount. The GROUP BY clause was essential because it allowed me to aggregate the sales for each individual sales agent.
+
+17.	Which sales agent made the most dollars in sales in 2009?
+SELECT e.FirstName, e.LastName, SUM(i.Total) AS total_sales FROM Employees AS e JOIN Customers AS c ON e.EmployeeId = c.SupportRepId JOIN Invoices AS i ON c.CustomerId = i.CustomerId WHERE e.Title = 'Sales Support Agent' AND STRFTIME('%Y', i.InvoiceDate) = '2009' GROUP BY e.EmployeeId ORDER BY total_sales DESC LIMIT 1;
+--I built on the previous query by adding an extra condition to the WHERE clause: STRFTIME('%Y', i.InvoiceDate) = '2009'. This filtered the data to only include sales from 2009. The LIMIT 1 clause then ensured that only the top-selling agent was returned.
+
+18.	What are the names of all the artists who do not have an album in this database?
+SELECT a.name
+FROM artists AS a LEFT JOIN albums AS al ON a.artistid = al.artistid
+WHERE al.albumid IS NULL
+ORDER BY a.name;
+-- To identify the artists who did not have an album, I performed a LEFT JOIN from the artists table to the albums table. I then filtered the results to find records where the albumid was NULL, which indicated that an artist had no corresponding album.
+
+19.	What is the average number of tracks across all playlists?
+WITH playlist_track_counts AS ( SELECT COUNT(trackid) AS track_count
+FROM playlist_track
+GROUP BY playlistid )
+SELECT AVG(track_count) AS average_tracks_per_playlist
+FROM playlist_track_counts;
+--This question required two steps. I first used a Common Table Expression (CTE) to count the number of tracks for each individual playlist. I then calculated the average of those track counts across all playlists.
+20.	What are the total sales for each genre?
+SELECT g.name AS genre_name, SUM(ii.quantity * ii.unitprice) AS total_genre_sales
+FROM genres AS g JOIN tracks AS t ON g.genreid = t.genreid JOIN invoice_items AS ii ON t.trackid = ii.trackid
+GROUP BY g.name
+ORDER BY total_genre_sales DESC;
+-- To analyze the sales performance of different music genres, I joined the genres, tracks, and invoice_items tables. I then used the SUM function to calculate the total sales for each genre and grouped the results by the genre's name.
